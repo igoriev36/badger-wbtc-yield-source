@@ -18,11 +18,12 @@ import { info, success } from '../helpers';
 
 export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').setAction(
   async (taskArguments, hre) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
     const { constants, provider, getContractAt, getContractFactory, getSigners, utils } = ethers;
     const [contractsOwner] = await getSigners();
     const { AddressZero } = constants;
     const { getBlock, getBlockNumber, getTransactionReceipt, send } = provider;
+    const { deploy } = deployments;
 
     async function increaseTime(time: number) {
       await send('evm_increaseTime', [time]);
@@ -31,9 +32,16 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
 
     info('Deploying BadgerWBTCVaultYieldSource...');
 
-    const BadgerWBTCVaultYieldSourceFactory = await getContractFactory('WBTCVaultYieldSource');
+    const badgerWbtcVaultYieldSourceResult = await deploy('WBTCVaultYieldSource', {
+      from: await contractsOwner.getAddress(),
+    });
 
-    const BadgerWBTCVaultYieldSource = (await BadgerWBTCVaultYieldSourceFactory.deploy());
+
+    //const BadgerWBTCVaultYieldSourceFactory = await getContractFactory('WBTCVaultYieldSource');
+
+    const BadgerWBTCVaultYieldSource = await getContractAt(
+      'WBTCVaultYieldSource', badgerWbtcVaultYieldSourceResult.address);
+    //(await BadgerWBTCVaultYieldSourceFactory.deploy());
 
     await BadgerWBTCVaultYieldSource.initialize(
       BADGER_WBTC_VAULT_ADDRESS_MAINNET,

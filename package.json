@@ -16,7 +16,7 @@
     "start-fork": "FORK_ENABLED=true hardhat node --no-reset --no-deploy",
     "impersonate-accounts": "hardhat --network localhost fork:impersonate-accounts ",
     "distribute-ether": "hardhat --network localhost fork:distribute-ether-from-binance",
-    "create-prize-pool": "hardhat --network localhost fork:create-aave-prize-pool",
+    "create-prize-pool": "hardhat --network localhost fork:create-wbtc-pool-prize",
     "deploy-fork": "FORK_ENABLED=true; rm -rf deployments/localhost && yarn deploy localhost",
     "run-fork": "FORK_ENABLED=true; yarn impersonate-accounts && yarn distribute-ether && yarn create-prize-pool",
     "test": "yarn clean && hardhat test",
@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "@aave/protocol-v2": "1.0.1",
-    "@openzeppelin/contracts-upgradeable": "3.4.1",
+    "@openzeppelin/contracts": "^3.2.0",
+    "@openzeppelin/contracts-upgradeable": "^3.2.0",
     "@pooltogether/fixed-point": "1.0.0",
     "@pooltogether/yield-source-interface": "1.0.1"
   },

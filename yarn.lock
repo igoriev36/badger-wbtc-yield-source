@@ -767,7 +767,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:3.4.1":
+"@openzeppelin/contracts-upgradeable@npm:3.4.1, @openzeppelin/contracts-upgradeable@npm:^3.2.0":
   version: 3.4.1
   resolution: "@openzeppelin/contracts-upgradeable@npm:3.4.1"
   checksum: 07818b4b85af044ccba535128892975b8da2dc467fbc344b82d916dcb67b1f0967a0641f52c23638adc1a7a87178fa17408a86713a3863e8a983b3e36e9bf1a9
@@ -778,6 +778,13 @@ __metadata:
   version: 2.5.1
   resolution: "@openzeppelin/contracts@npm:2.5.1"
   checksum: 380ca5ee6cd0561bb2a4c4553dc2b8cd5dfd95dfcefa08e82966e80f8d7b83a484d9580c83b6becc04397cfc7fc2b052464c7945eb105020a28936242bea6d9a
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts@npm:^3.2.0":
+  version: 3.4.1
+  resolution: "@openzeppelin/contracts@npm:3.4.1"
+  checksum: 1b39785beb962ca030138373d0414d88a3db1b09d0acd2759b41e53de5ab8e625f5d5633ef4dc592dc62154f8e789555908b0ca36d5491522dd075a911ce2202
   languageName: node
   linkType: hard
 
@@ -821,7 +828,8 @@ __metadata:
     "@nomiclabs/hardhat-ethers": 2.0.2
     "@nomiclabs/hardhat-etherscan": 2.1.1
     "@nomiclabs/hardhat-waffle": 2.0.1
-    "@openzeppelin/contracts-upgradeable": 3.4.1
+    "@openzeppelin/contracts": ^3.2.0
+    "@openzeppelin/contracts-upgradeable": ^3.2.0
     "@openzeppelin/hardhat-upgrades": 1.6.0
     "@pooltogether/fixed-point": 1.0.0
     "@pooltogether/pooltogether-contracts": 3.3.8

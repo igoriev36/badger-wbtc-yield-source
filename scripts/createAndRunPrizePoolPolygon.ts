@@ -9,7 +9,7 @@ import MultipleWinners from '@pooltogether/pooltogether-contracts/abis/MultipleW
 import YieldSourcePrizePool from '@pooltogether/pooltogether-contracts/abis/YieldSourcePrizePool.json';
 
 import { BigNumber } from 'ethers';
-import { dai } from '@studydefi/money-legos/erc20';
+import { dai, wbtc } from '@studydefi/money-legos/erc20';
 import { info, success } from './helpers';
 
 interface DepositAsset {
@@ -20,7 +20,7 @@ interface DepositAsset {
 }
 
 
-async function createPrizePools(){
+export async function createPrizePools(){
     console.log("running create prize pool script with chainId ", await getChainId())
     
     const { deployer } = await getNamedAccounts()

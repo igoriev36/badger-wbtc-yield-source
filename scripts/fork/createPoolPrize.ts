@@ -58,7 +58,7 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
 
     const wbtcYieldSourcePrizePoolConfig = {
       yieldSource: BadgerWBTCVaultYieldSource.address,
-      maxExitFeeMantissa: ethers.utils.parseUnits('0.5', 18),
+      maxExitFeeMantissa: ethers.utils.parseUnits('0.5', 8),
       maxTimelockDuration: 1000,
     };
 
@@ -68,10 +68,10 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
       rngService: RNGBlockhash.address,
       prizePeriodStart: block.timestamp,
       prizePeriodSeconds: 60,
-      ticketName: 'Ticket',
-      ticketSymbol: 'TICK',
-      sponsorshipName: 'Sponsorship',
-      sponsorshipSymbol: 'SPON',
+      ticketName: 'badger-wbtc',
+      ticketSymbol: 'BAD',
+      sponsorshipName: 'badger',
+      sponsorshipSymbol: 'erg',
       ticketCreditLimitMantissa: ethers.utils.parseEther('0.1'),
       ticketCreditRateMantissa: ethers.utils.parseEther('0.001'),
       numberOfWinners: 1,
@@ -83,9 +83,13 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
       8,
     );
 
+    console.log("Tx ", yieldSourceMultipleWinnersTx);
+
     const yieldSourceMultipleWinnersReceipt = await getTransactionReceipt(
       yieldSourceMultipleWinnersTx.hash,
     );
+
+    console.log("Receipt ", yieldSourceMultipleWinnersReceipt);
 
     const yieldSourcePrizePoolInitializedEvent = yieldSourceMultipleWinnersReceipt.logs.map(
       (log) => {

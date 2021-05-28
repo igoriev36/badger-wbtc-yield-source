@@ -6,37 +6,14 @@
 
 <br />
 
-# PoolTogether Aave Yield Source 👻
+# PoolTogether Badger Wbtc Yield Source 👻
 
-![Tests](https://github.com/pooltogether/aave-yield-source/actions/workflows/main.yml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/pooltogether/aave-yield-source/badge.svg)](https://coveralls.io/github/pooltogether/aave-yield-source)
-[![built-with openzeppelin](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://docs.openzeppelin.com/)
 
-PoolTogether Yield Source that uses [Aave](https://aave.com/) V2 to generate yield by lending any ERC20 token supported by Aave and deposited into the Aave Yield Source.
-
-# Usage
-
-## Adding a new Aave Lending Pool
-
-First make sure the Aave json config (`aave/aaveMainnet.json`, etc) includes the lending pool.
-
-Then, add the token symbol to the list in `aave.config.ts`.
+PoolTogether Yield Source that uses [Badger WBTC] to generate yield.
 
 ## Deployment
 
 Follow Installation instructions.
-
-Aave provides a json blob per network of the files in the [docs](https://docs.aave.com/developers/deployed-contracts/deployed-contracts)
-The deploy script parses this and deploys a proxy contract if the aToken file does exist in the deployments directory.
-
-Ensure the `lendingPoolAddressesProviderRegistry` is up to date in the namedAccounts field of `hardhat.config.ts` .
-
-To add a new network, add a json file in the `./aave` directory then run:
-
-`yarn deploy <new_network_name>`
-
-To add a new lending market, update the appropriate network json at `./aave` and run: 
-
 `yarn deploy <network_name>`
 
 The deployment script can be found in `deploy/deploy.ts`.
@@ -101,10 +78,10 @@ Start Mainnet fork in a terminal window with the command:
 yarn start-fork
 ```
 
-In another window, start the scripts to deploy and create a Aave Yield Source Prize Pool, deposit Dai into it, award the prize and withdraw.
+In another window, start the scripts to deploy and create a Badger Wbtc Yield Source Prize Pool, deposit WBTC into it, award the prize and withdraw.
 
 ```
-yarn deploy-fork && yarn run-fork
+yarn run-fork
 ```
 
 ### Contract Verification

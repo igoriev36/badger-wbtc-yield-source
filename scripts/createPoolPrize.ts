@@ -3,49 +3,45 @@ import RNGBlockhash from '@pooltogether/pooltogether-rng-contracts/deployments/m
 import ControlledToken from '@pooltogether/pooltogether-contracts/abis/ControlledToken.json';
 import MultipleWinners from '@pooltogether/pooltogether-contracts/abis/MultipleWinners.json';
 import YieldSourcePrizePool from '@pooltogether/pooltogether-contracts/abis/YieldSourcePrizePool.json';
+import hre from "hardhat";
+import { wbtc } from '@studydefi/money-legos/erc20';
 
-import { dai, usdc } from '@studydefi/money-legos/erc20';
-
-import { task } from 'hardhat/config';
 
 import {
   BADGER_WBTC_VAULT_ADDRESS_MAINNET,
-  WBTC_ADDRESS,
   WBTC_RICH_ADDRESS,
-} from '../constants';
+} from './constants';
 
-import { info, success } from '../helpers';
+import { info, success } from './helpers';
 
-export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').setAction(
-  async (taskArguments, hre) => {
-    const { ethers, deployments } = hre;
+
+async function poolCycle() {
+    const { ethers } = hre;
     const { constants, provider, getContractAt, getContractFactory, getSigners, utils } = ethers;
-    const [contractsOwner] = await getSigners();
     const { AddressZero } = constants;
     const { getBlock, getBlockNumber, getTransactionReceipt, send } = provider;
-    const { deploy } = deployments;
 
     async function increaseTime(time: number) {
       await send('evm_increaseTime', [time]);
       await send('evm_mine', []);
     }
 
+    const accountToImpersonate = WBTC_RICH_ADDRESS;
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [accountToImpersonate]
+    })
+    let contractsOwner = await ethers.provider.getSigner(accountToImpersonate)
+
     info('Deploying BadgerWBTCVaultYieldSource...');
 
-    const badgerWbtcVaultYieldSourceResult = await deploy('WBTCVaultYieldSource', {
-      from: await contractsOwner.getAddress(),
-    });
+    const BadgerWBTCVaultYieldSourceFactory = await getContractFactory('WBTCVaultYieldSource');
 
-
-    //const BadgerWBTCVaultYieldSourceFactory = await getContractFactory('WBTCVaultYieldSource');
-
-    const BadgerWBTCVaultYieldSource = await getContractAt(
-      'WBTCVaultYieldSource', badgerWbtcVaultYieldSourceResult.address);
-    //(await BadgerWBTCVaultYieldSourceFactory.deploy());
+    const BadgerWBTCVaultYieldSource = (await BadgerWBTCVaultYieldSourceFactory.deploy());
 
     await BadgerWBTCVaultYieldSource.initialize(
       BADGER_WBTC_VAULT_ADDRESS_MAINNET,
-      WBTC_ADDRESS
+      wbtc.address
     );
 
     info('Deploying WbtcYieldSourcePrizePool...');
@@ -68,10 +64,10 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
       rngService: RNGBlockhash.address,
       prizePeriodStart: block.timestamp,
       prizePeriodSeconds: 60,
-      ticketName: 'badger-wbtc',
-      ticketSymbol: 'BAD',
-      sponsorshipName: 'badger',
-      sponsorshipSymbol: 'erg',
+      ticketName: 'Ticket',
+      ticketSymbol: 'TICK',
+      sponsorshipName: 'Sponsorship',
+      sponsorshipSymbol: 'SPON',
       ticketCreditLimitMantissa: ethers.utils.parseEther('0.1'),
       ticketCreditRateMantissa: ethers.utils.parseEther('0.001'),
       numberOfWinners: 1,
@@ -83,13 +79,11 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
       8,
     );
 
-    console.log("Tx ", yieldSourceMultipleWinnersTx);
+    await new Promise(r => setTimeout(r, 120000));
 
     const yieldSourceMultipleWinnersReceipt = await getTransactionReceipt(
       yieldSourceMultipleWinnersTx.hash,
     );
-
-    console.log("Receipt ", yieldSourceMultipleWinnersReceipt);
 
     const yieldSourcePrizePoolInitializedEvent = yieldSourceMultipleWinnersReceipt.logs.map(
       (log) => {
@@ -111,35 +105,39 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
 
     success(`Deployed BadgeWBTCYieldSourcePrizePool! ${prizePool.address}`);
 
-    /*const prizeStrategy = await getContractAt(
+    console.log("WBTC address: ", wbtc.address);
+    console.log("Badger Vault address: ", BADGER_WBTC_VAULT_ADDRESS_MAINNET);
+    console.log("Yield Source Addres: ", BadgerWBTCVaultYieldSource.address);
+
+    const prizeStrategy = await getContractAt(
       MultipleWinners,
       await prizePool.prizeStrategy(),
       contractsOwner,
     );
-    await prizeStrategy.addExternalErc20Award(dai.address);
+    await prizeStrategy.addExternalErc20Award(wbtc.address);
 
-    const usdcAmount = ethers.utils.parseUnits('1000', 6);
-    const usdcContract = await getContractAt(usdc.abi, usdc.address, contractsOwner);
-    await usdcContract.approve(prizePool.address, usdcAmount);
+    const wbtcAmount = ethers.utils.parseUnits('10', 8);
+    const wbtcContract = await getContractAt(wbtc.abi, wbtc.address, contractsOwner);
+    await wbtcContract.approve(prizePool.address, wbtcAmount);
     
-    info(`Depositing ${ethers.utils.formatUnits(usdcAmount, 6)} USDC...`);
+    info(`Depositing ${ethers.utils.formatUnits(wbtcAmount, 8)} WBTC...`);
 
     await prizePool.depositTo(
-      contractsOwner.address,
-      usdcAmount,
+      contractsOwner._address,
+      wbtcAmount,
       await prizeStrategy.ticket(),
       AddressZero,
     );
 
-    success('Deposited USDC!');
+    success('Deposited WBTC!');
     
     info(`Prize strategy owner: ${await prizeStrategy.owner()}`);
     await increaseTime(30);
 
     // simulating returns in the vault during the prizePeriod
-    const usdcProfits = ethers.utils.parseUnits('10000', 6);
-    info(`yVault generated ${ethers.utils.formatUnits(usdcProfits, 6)} USDC`);
-    await usdcContract.transfer(USDC_VAULT_ADDRESS_MAINNET, usdcProfits);
+    const wbtcProfits = ethers.utils.parseUnits('100', 8);
+    info(`Vault generated ${ethers.utils.formatUnits(wbtcProfits, 8)} WBTC`);
+    await wbtcContract.transfer(BADGER_WBTC_VAULT_ADDRESS_MAINNET, wbtcProfits);
 
     await increaseTime(30);
 
@@ -161,16 +159,16 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
 
     const awarded = awardLogs.find((event) => event && event.name === 'Awarded');
 
-    success(`Awarded ${ethers.utils.formatUnits(awarded?.args?.amount, 6)} USDC!`);
+    success(`Awarded ${ethers.utils.formatUnits(awarded?.args?.amount, 8)} WBTC!`);
 
     info('Withdrawing...');
     const ticketAddress = await prizeStrategy.ticket();
     const ticket = await getContractAt(ControlledToken, ticketAddress, contractsOwner);
     const withdrawalAmount = ethers.utils.parseUnits('100', 6);
-    const earlyExitFee = await prizePool.callStatic.calculateEarlyExitFee(contractsOwner.address, ticket.address, withdrawalAmount);
+    const earlyExitFee = await prizePool.callStatic.calculateEarlyExitFee(contractsOwner._address, ticket.address, withdrawalAmount);
 
     const withdrawTx = await prizePool.withdrawInstantlyFrom(
-      contractsOwner.address,
+      contractsOwner._address,
       withdrawalAmount,
       ticket.address,
       earlyExitFee.exitFee,
@@ -186,11 +184,17 @@ export default task('fork:create-wbtc-pool-prize', 'Create WBTC Prize Pool').set
     });
 
     const withdrawn = withdrawLogs.find((event) => event && event.name === 'InstantWithdrawal');
-    success(`Withdrawn ${ethers.utils.formatUnits(withdrawn?.args?.redeemed, 6)} USDC!`);
-    success(`Exit fee was ${ethers.utils.formatUnits(withdrawn?.args?.exitFee, 6)} USDC`);
+    success(`Withdrawn ${ethers.utils.formatUnits(withdrawn?.args?.redeemed, 6)} WBTC!`);
+    success(`Exit fee was ${ethers.utils.formatUnits(withdrawn?.args?.exitFee, 6)} WBTC`);
 
     await prizePool.captureAwardBalance();
     const awardBalance = await prizePool.callStatic.awardBalance();
-    success(`Current awardable balance is ${ethers.utils.formatUnits(awardBalance, 6)} USDC`);*/
-  },
-);
+    success(`Current awardable balance is ${ethers.utils.formatUnits(awardBalance, 8)} WBTC`)
+  }
+
+poolCycle()
+.then(() => process.exit(0))
+.catch(error => {
+  console.error(error);
+  process.exit(1);
+});
